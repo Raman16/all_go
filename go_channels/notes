@@ -1,0 +1,857 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	for _, link := range links {
+		checkLink(link)
+	}
+}
+
+func checkLink(link string) {
+	_, err := http.Get(link)   //will return two *Response(struct) and error
+    ////waiting for response until it comes down we sit here ideally
+	if err != nil {
+		fmt.Println(link, "might be down")
+		return
+	}
+	fmt.Println(link, "is Up")
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+http://golang.org is Up
+http://facebook.com is Up
+http://stackoverflow.com is Up
+http://amazon.com is Up
+
+
+
+Above code runs like below.
+http://google.com is Up
+.....
+wait 
+.....
+http://golang.org is Up
+.....
+wait 
+http://facebook.com is Up
+.....
+wait 
+http://stackoverflow.com is Up
+..
+wait 
+http://amazon.com is Up
+
+
+
+
+
+Hence we are using
+go routine and go_channels
+
+Go routine uses single CPU core by 
+default and divides go routine 
+If there is multiple CPU core also, it
+wil use ony one CPU core by default,but we can arrange to multiple CPU core
+
+"important Phase":Concurrency is not same as Parrellism
+
+go scheduler divides go Routine in time
+Concurrency 1sec, 350ms(routine 1),300ms(routine2),350ms(routine3) 
+Parrellism 1sec,=>multiple core CPU runs all at same time 350ms(routine1,routine2,routine3)
+
+
+
+
+
+go checkLink(link)
+go->creates  a new thread go routine.
+each time it loop,instead of waiting, it
+will create go routine.
+for _, link := range links {
+		checkLink(link)
+	}
+
+
+
+
+
+
+To run go routine we use 
+go key word
+i.e go checkLink(link)
+
+
+main routine
+  child routine
+  child routine
+  child routine
+  child routine
+
+main routine does not care of child routine,
+so when below code runs we get nothing output
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	for _, link := range links {
+		go 	checkLink(link)
+	}
+}
+
+func checkLink(link string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		return
+	}
+	fmt.Println(link, "is Up")
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+
+
+
+When we run above program it show nothing output because main routine
+doesnt care about child routine,Hence we have concept called channel.
+
+Channels are only the way that we have to communicate between goRoutines
+so that it doent give unexpected behavoiour
+
+Channel->communicate's between main routine and child's routine..
+
+
+
+
+
+
+
+
+
+
+
+Channels are the pipes that connect concurrent goroutines. 
+You can send values into channels from one goroutine and receive those values into another goroutine.
+
+Create a new channel with make(chan val-type). Channels are typed by the values they convey.
+
+Send a value into a channel using the channel <- syntax. Here we send "ping" to the messages channel
+ we made above, from a new goroutine.
+
+The <-channel syntax receives a value from the channel. Here we’ll receive the "ping" message we sent above and
+ print it out.
+
+By default sends and receives block until both the sender and receiver are ready. 
+This property allowed us to wait at the end of our program for the "ping" message without having to use any
+ other synchronization.
+
+
+
+example:
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+	fmt.Println(<-c)
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- "Might be down"
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- "Is Up"
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+Is Up
+
+
+
+
+example:2
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- "Might be down"
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- "Is Up"
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+Is Up
+http://golang.org is Up
+Is Up
+
+
+
+
+
+example:3
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- "Might be down"
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- "Is Up"
+	return
+}
+
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+Is Up
+http://golang.org is Up
+Is Up
+http://stackoverflow.com is Up
+Is Up
+http://facebook.com is Up
+Is Up
+http://amazon.com is Up
+Is Up
+
+
+
+
+example:5
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- "Might be down"
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- "Is Up"
+	return
+}
+
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+Is Up
+http://golang.org is Up
+Is Up
+http://stackoverflow.com is Up
+Is Up
+http://facebook.com is Up
+Is Up
+http://amazon.com is Up
+Is Up
+
+
+Print all but hangs since we added one extra channel reciever which is waiting but
+will never get (hangs)
+
+
+
+
+
+
+
+example:5
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for i := 0; i < len(links); i++ {
+		fmt.Println(<-c)   //this will wait until go routine completes it request from the above.
+	}
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- "Might be down"   //pushing message into the channel
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- "Is Up"
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+Is Up
+http://stackoverflow.com is Up
+Is Up
+http://golang.org is Up
+Is Up
+http://facebook.com is Up
+Is Up
+http://amazon.com is Up
+Is Up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Repeating Routine
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for {
+		go checkLink(<-c, c)
+	}
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- link
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- link
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://amazon.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+http://facebook.com is Up
+http://google.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://amazon.com is Up
+http://facebook.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://facebook.com is Up
+http://google.com is Up
+http://amazon.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://amazon.com is Up
+http://golang.org is Up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Alternate for loop
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for l := range c {
+		go checkLink(l, c)
+	}
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- link
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- link
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://facebook.com is Up
+http://golang.org is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://amazon.com is Up
+http://golang.org is Up
+http://facebook.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://google.com is Up
+http://facebook.com is Up
+http://stackoverflow.com is Up
+http://amazon.com is Up
+
+
+Sleeping a Routine
+func Sleep
+
+func Sleep(d Duration)
+Sleep pauses the current goroutine for at least the duration d.
+A negative or zero duration causes Sleep to return immediately.
+
+
+
+
+
+
+
+function literal(Anonymous function)
+go func() {
+    time.Sleep(5 * time.Second)
+    checkLink(l, c)
+}()
+
+
+
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for l := range c {
+
+		go func() {
+			time.Sleep(5 * time.Second)
+			checkLink(l, c)
+		}()
+	}
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- link
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- link
+	return
+}
+
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+http://golang.org is Up
+http://stackoverflow.com is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+http://amazon.com is Up
+
+
+
+
+
+
+
+
+example
+for l := range c {
+
+		go func(link string) {
+			time.Sleep(5 * time.Second)
+			checkLink(link, c)
+		}(l)
+	}
+
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func main() {
+	links := []string{
+		"http://google.com",
+		"http://golang.org",
+		"http://facebook.com",
+		"http://stackoverflow.com",
+		"http://amazon.com",
+	}
+
+	c := make(chan string)
+
+	for _, link := range links {
+		go checkLink(link, c)
+	}
+
+	for l := range c {
+
+		go func(link string) {
+			time.Sleep(5 * time.Second)
+			checkLink(link, c)
+		}(l)
+	}
+
+}
+
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link)
+	if err != nil {
+		fmt.Println(link, "might be down")
+		c <- link
+		return
+	}
+	fmt.Println(link, "is Up")
+	c <- link
+	return
+}
+sysadmin@AcubeL020:/var/www/html/go_channels$ go run main.go
+http://google.com is Up
+http://golang.org is Up
+http://stackoverflow.com is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://golang.org is Up
+http://stackoverflow.com is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+http://facebook.com is Up
+http://amazon.com is Up
+http://google.com is Up
+http://stackoverflow.com is Up
+http://golang.org is Up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Another tough one!  Is there any issue with the following code?
+
+package main
+ 
+func main() {
+     c := make(chan string)
+     c <- "Hi there!"
+}
+The syntax of this program is OK, but the program will never exit
+ because it will wait for something to receive the value we're passing into the channel.

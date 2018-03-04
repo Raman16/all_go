@@ -1,0 +1,172 @@
+map is same as object in javascript
+
+                                key=>value
+ all key's are same type        key=>value       all value are of same type
+                                key=>value
+                                key=>value
+
+We can declare map in many ways.
+
+Method:I
+
+colors := map[string]string{} // this will create a new map with empty string values inside of it
+
+Example:1
+package main
+
+import "fmt"
+
+func main() {
+	colors := map[string]string{
+		"red":   "#ff0000",
+		"green": "4bf745",
+	}
+	fmt.Println(colors)
+}
+
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+map[green:4bf745 red:#ff0000]
+
+
+
+
+Method:II
+
+var colors map[string]string  // this will create a new map with empty string values inside of it
+package main
+
+import "fmt"
+
+func main() {
+	var colors map[string]string
+	fmt.Println(colors)
+}
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+map[]   
+
+
+
+
+Method:III
+
+color:= make(map[string]string)//this will create a new map with no values inside of it
+
+package main
+
+import "fmt"
+
+func main() {
+
+	colors := make(map[string]string)
+	colors["white"] = "#ffffff"
+	fmt.Println(colors)
+}
+
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+map[white:#ffffff]
+
+
+
+example:2
+package main
+
+import "fmt"
+
+func main() {
+
+	colors := make(map[int]string)
+	colors[10] = "#ffffff"
+	//struct.10 //dam error it does not work like this so always use colors[10]
+	fmt.Println(colors)
+}
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+map[10:#ffffff]
+
+
+
+
+Delete in map
+
+delete(map,key)
+
+
+
+example:
+package main
+
+import "fmt"
+
+func main() {
+
+	colors := make(map[int]string)
+	colors[10] = "#ffffff"
+	delete(colors, 10)
+	fmt.Println(colors)
+}
+
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+map[]
+
+
+
+Printing Map Key->value pair
+
+Example:
+package main
+
+import "fmt"
+
+func main() {
+
+	colors := map[string]string{
+		"red":   "$ff000",
+		"white": "#ffffff",
+		"black": "#000000",
+	}
+	printMap(colors) //pass by reference
+}
+
+func printMap(c map[string]string) {
+	for color, hex := range c {
+		fmt.Println("Hex code for", color, "is", hex)
+	}
+}
+
+sysadmin@AcubeL020:/var/www/html/go_map$ go run main.go
+Hex code for red is $ff000
+Hex code for white is #ffffff
+Hex code for black is #000000
+
+
+
+
+Difference between Map and Structs
+
+Map
+All keys must be the same type
+All values must be the same type
+Keys are indexed,i.e we can iterate over them
+Reference Type //pass by reference
+Use to represent a collection of closely related properties
+i.e     "red":   "$ff000",
+		"white": "#ffffff",
+		"black": "#000000",
+
+Dont need to know all the keys at compile time
+
+
+
+
+
+Structs
+Values can be of different type
+keys dont support indexing
+Value Type //pass by value
+Use to represent a "thing" with a lot of different properties.
+i.e
+type struct Person{
+    name string
+    age int
+}
+we need to know all the different fields at compile time
+

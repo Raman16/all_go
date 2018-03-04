@@ -1,0 +1,308 @@
+net package
+Package net provides a portable 
+interface for network I/O, including TCP/IP, UDP, domain name resolution, and Unix domain sockets.
+
+http paackage
+Package http provides HTTP client and server implementations.
+
+
+
+Readmore on DOCS
+
+
+Example:
+
+
+step1:
+
+func Get
+func Get(url string) (resp *Response, err error)
+Get issues a GET to the specified URL. If the response is one of the following redirect codes, Get follows the redirect, up to a maximum of 10 redirects:
+
+301 (Moved Permanently)
+302 (Found)
+303 (See Other)
+307 (Temporary Redirect)
+308 (Permanent Redirect)
+An error is returned if there were too many redirects or if there was an HTTP protocol error. A non-2xx response doesn't cause an error.
+
+When err is nil, resp always contains a non-nil resp.Body. Caller should close resp.Body when done reading from it.
+
+Get is a wrapper around DefaultClient.Get.
+
+To make a request with custom headers, use NewRequest and DefaultClient.Do.
+
+
+step:2
+
+resp *Response
+type Response struct {
+        Status     string // e.g. "200 OK"
+        StatusCode int    // e.g. 200
+        Proto      string // e.g. "HTTP/1.0"
+        ProtoMajor int    // e.g. 1
+        ProtoMinor int    // e.g. 0
+        Body io.ReadCloser
+        ContentLength int64
+        TransferEncoding []string
+        Close bool
+        Uncompressed bool
+        Trailer Header
+        Request *Request
+        TLS *tls.ConnectionState
+}
+
+
+step:3)
+In go we can take multiple interfaces and assembly to form in another interface
+like below
+Body io.ReadCloser
+type ReadCloser interface {
+        Reader
+        Closer
+}
+
+
+step:4)
+ReadCloser
+type Reader interface {
+        Read(p []byte) (n int, err error)
+}
+type Closer interface {
+        Close() error
+}   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+func Post
+func Post(url string, contentType string, body io.Reader) (resp *Response, err error)
+Post issues a POST to the specified URL.
+
+Caller should close resp.Body when done reading from it.
+
+If the provided body is an io.Closer, it is closed after the request.
+
+Post is a wrapper around DefaultClient.Post.
+
+To set custom headers, use NewRequest and DefaultClient.Do.
+
+See the Client.Do method documentation for details on how redirects are handled.
+
+
+
+
+
+
+
+Example:
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+)
+
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error", err)
+		os.Exit(1)
+	}
+	fmt.Println(resp)
+}
+
+
+sysadmin@AcubeL020:/var/www/html/go_http$ go run main.go
+&{200 OK 200 HTTP/1.1 1 1 map[Expires:[-1] Set-Cookie:[1P_JAR=2018-03-04-07; expires=Tue, 
+03-Apr-2018 07:59:00 GMT; path=/; domain=.google.co.in NID=125=E__f9sWsuXpoIiM5YxL1_kwJwqSn8ZYpNVglPD-
+9KEqzanJPBFHQAs3zUvzr5dt07ZoCx2rSKcFIYcK73dBYWaa_r__8yiBO1StkZrbL0fjOZ5nHtKRekxvDwG8VfAO_; expires=Mon,
+03-Sep-2018 07:59:00 GMT; path=/; domain=.google.co.in; HttpOnly] Date:[Sun, 04 Mar 2018 07:59:00 GMT]
+Content-Type:[text/html; charset=ISO-8859-1] P3p:[CP="This is not a P3P policy! See g.co/p3phelp for 
+more info."] Server:[gws] X-Xss-Protection:[1; mode=block] X-Frame-Options:[SAMEORIGIN] Cache-Control
+:[private, max-age=0]] 0xc420164360 -1 [] false true map[] 0xc4201b0000 <nil>}
+
+
+
+
+
+
+
+
+
+
+
+EXAMPLE:2
+io.Copy(ps.Stdout,resp.body)
+package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+)
+
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error", err)
+		os.Exit(1)
+	}
+	io.Copy(os.Stdout, resp.Body)
+}
+
+
+
+Sysadmin@AcubeL020:/var/www/html/go_http$ go run main.go<!doctype html>
+<html itemscope="" itemtype="http://schema.org/WebPage" lang="en-IN"><head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<meta content="/images/branding/googleg/1x/googleg_standard_color_128dp.png" itemprop="image">
+<title>Google</title>
+same as bove output:
+
+
+MOST IMPORTANT POINT TO REMEMBER FOR ABOVE PROGRAM
+
+io.Copy()
+os.Stdout is of type *File
+File has a function called Write
+Therefor it implements Write interface
+
+
+
+hold CONTROLKEY ON KB and hover on Copy 
+func Copy(dst Writer, src Reader) (written int64, err error) {
+	return copyBuffer(dst, src, nil)
+}
+
+
+
+
+
+
+
+Important section below
+type Writer interface
+type Writer
+Writer is the interface that wraps the basic Write method.
+
+Write writes len(p) bytes from p to the underlying data stream. 
+It returns the number of bytes written from p (0 <= n <= len(p)) and any error encountered that
+ caused the write to stop early. Write must return a non-nil error if it returns n < len(p).
+  Write must not modify the slice data, even temporarily.
+
+Implementations must not retain p.
+
+type Writer interface {
+        Write(p []byte) (n int, err error)
+}
+
+
+
+
+example:3
+package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+)
+
+type logWriter struct{}
+
+func main() {
+	resp, err := http.Get("http://google.com")
+	if err != nil {
+		fmt.Println("Error", err)
+		os.Exit(1)
+	}
+	lw := logWriter{}
+	io.Copy(lw, resp.Body)
+}
+
+func (logWriter) Write(bs []byte) (int, error) {
+	fmt.Println(string(bs))
+	fmt.Println("Just wrote this many bytes:", len(bs))
+	return len(bs), nil //check type Writer interface from document which is very useful
+}
+
+output:
+we will get same as above
+
+Quiz 
+
+
+1)To say that a type satisfies an interface means that...
+ans)The type implements all of the functions contains in the interface definition
+
+
+
+
+2)Take a look at the following code.  Does the rectangle type satisfy the shape  interface?
+
+type shape interface {
+    area() int
+}
+ 
+type square struct {
+    sideLength int
+}
+ 
+type rectangle struct {
+    height float64
+    width float64
+}
+ 
+func (s square) area() int {
+    return s.sideLength * s.sideLength
+}
+ 
+func (r rectangle) area() float64 {
+    return r.height * r.width
+}
+ 
+func printArea(s shape) {
+    fmt.Println(s.area())
+}
+ans)
+No, because rectangle s version of the area function returns a float64,
+ but the shape interface expects a return type of int
+
+
+
+
+ 3)
+
+ Imagine that you ask a coworker to create a new type that implements the Reader  
+ interface to take data from a text file and print it on the screen.
+   They present you with the following code:
+
+type textFileReader struct {}
+ 
+func (textFileReader) Read(bs []byte) (int, error) {
+    return "Information from a text file"
+}
+They say that this code successfully compiled, so it must be correct.
+ You then review their code and give them feedback.  What would you say?
+
+ans)
+I would say that while the textFileReader type conforms to the requirements of the Reader interface,
+ it doesn't actually implement the desired behavior of reading a file from the hard drive
+
+
+
+

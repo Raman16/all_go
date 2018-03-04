@@ -1,0 +1,107 @@
+go interfaces
+Interfaces are named collections of method signatures.
+
+
+We use interface to define a method set/function set of type .
+Anything defined inside the interface with same signature that is 
+exist in another type will beccome the type of signature as well.
+
+
+Example:
+package main
+
+import "fmt"
+
+type englishBot struct{}
+type spanishBot struct{}
+
+type bot interface {
+	getGreeting() string
+}
+
+func main() {
+	eb := englishBot{}
+	sb := spanishBot{}
+	printGreeting(eb)
+	printGreeting(sb)
+}
+
+func printGreeting(b bot) {
+	fmt.Println(b.getGreeting())
+}
+
+func (englishBot) getGreeting() string {   //eb englishBot since eb we are not using we ignore else unused erro
+	//very custom logic
+	return "Hi there !"
+}
+
+func (spanishBot) getGreeting() string {
+	return "Hola!"
+}
+
+sysadmin@AcubeL020:/var/www/html/go_interfaces$ go run main.go
+Hi there !
+Hola!
+
+
+General syntax
+type bot interface{
+    getGreeting(string,int)(string, error)
+}
+
+
+one more Example
+type user struct{
+    name string
+}
+type bot interface{
+    getGreeting(string,int)(string,error)
+    getBotVersion() float64
+    respondToUser(user) string
+}
+
+
+
+
+
+
+
+
+
+There are two types of go Types
+
+1)concreate type//we can create create a value directly
+map,struct,
+int,string,
+englishBot//custom type
+
+
+2)Interface type/we can't actually create a value directly out of this type
+bot
+
+
+
+Important Notes
+1)Interface are not generic types
+2)Interface are implicit
+i.e
+type englishBot struct{}
+type spanishBot struct{}
+
+type bot interface {
+	getGreeting() string
+}
+
+
+In the above code we didnt link up anything manually to each other
+go took care of it and linked the interface and custom type
+i.e englishBot and spanishBot are also type of interface bot
+like 
+
+//type englishBot implements bot struct 
+
+3)Interface are a contract to help us manage types
+i.e GarbageIn-GarbageOut
+
+
+4)Interface are tough

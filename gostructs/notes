@@ -1,0 +1,671 @@
+
+struct->structure
+Data structure. Collection of properties
+that are related together.
+i.e collection of related items.
+
+
+main.go
+
+package main
+
+import "fmt"
+
+type person struct {
+	firstName string
+	lastName  string
+}
+
+func main() {
+
+	//alex := person{"Alex", "Anderson"}
+	alex := person{firstName: "Alex", lastName: "Anderson"}
+	fmt.Print(alex)
+}
+
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{Alex Anderson}
+
+
+
+
+
+
+
+Type ZeroValues
+string     ""
+int        0
+float      0
+bool      false
+
+
+
+
+
+example:
+package main
+
+import "fmt"
+
+type person struct {
+	firstName string
+	lastName  string
+}
+
+func main() {
+
+	var alex person
+	fmt.Print(alex)
+}
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{ }
+Both defined empty string.
+
+
+
+Empty Values
+
+example:2///percent+v identifier prints all the different field names and value
+package main
+
+import "fmt"
+
+type person struct {
+	firstName string
+	lastName  string
+}
+
+func main() {
+
+	var alex person
+	fmt.Printf("%+v", alex) //percent+v identifier prints all the different field names and value
+}
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName: lastName:}
+
+
+
+
+
+
+Values updating in structs
+example:3
+package main
+
+import "testing"
+
+func TestNewDeck(t *testing.T) {
+	d := newDeck()
+	if len(d) != 16 {
+		t.Error("Expected deck length of 20, but got", len(d))
+	}
+
+	if d[0] != "Ace of Spades" {
+		t.Error("Expected first card of Ace of Spades,but got", d[0])
+	}
+
+	if d[len(d)-1] != "Four of Clubs" {
+		t.Error("Expected last card of Four of Clubs,but got ", d[len(d)-1])
+	}
+
+}
+
+
+sysadmin@AcubeL020:/var/www/html/go$ go test
+PASS
+ok      _/var/www/html/go       0.001s
+
+
+
+
+
+
+example:3
+package main
+
+import "fmt"
+
+type person struct {
+	firstName string
+	lastName  string
+}
+
+func main() {
+
+	var alex person
+	alex.firstName = "Alex"
+	alex.lastName = "Anderson"
+	fmt.Printf("%+v", alex) //percent+v identifier prints all the different field names and value
+}
+
+
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Alex lastName:Anderson}
+
+
+
+
+
+
+
+example:
+
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	contact   contactInfo //custom type defined in another custom type
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contact: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	fmt.Printf("%+v", jim)
+}
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Jim lastName:Party contact:{email:jim@gmail.com zipCode:94000}}
+
+
+
+
+
+
+
+
+
+
+
+
+example:3
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	//contact contactInfo
+	contactInfo ///equal to contactInfo:contactInfo
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contactInfo: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	fmt.Printf("%+v", jim)
+}
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Jim lastName:Party contactInfo:{email:jim@gmail.com zipCode:94000}}
+
+
+
+
+
+example:4
+Recevier function
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	//contact contactInfo
+	contactInfo ///equal to contactInfo:contactInfo
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contactInfo: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	jim.print()
+}
+
+func (p person) print() {
+	fmt.Printf("%+v", p)
+
+}
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Jim lastName:Party contactInfo:{email:jim@gmail.com zipCode:94000}}
+
+
+
+
+
+
+
+example:5
+One more Reciever
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	//contact contactInfo
+	contactInfo ///equal to contactInfo:contactInfo
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contactInfo: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	jim.updateName("Jimmy")
+	jim.print()
+}
+
+func (p person) updateName(newFirstName string) {
+	p.firstName = newFirstName
+}
+func (p person) print() {
+	fmt.Printf("%+v", p)
+
+}
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Jim lastName:Party contactInfo:{email:jim@gmail.com zipCode:94000}}
+
+//CheckAbove DamIt, Value didnot change Jim is till Jim,but not Jimmy
+Above concept is called Pass By Value,Hence it didnt change
+
+
+
+Below code Using Pass By Reference using Pointer concept, we can solve the 
+above issue
+
+
+
+example:5
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	//contact contactInfo
+	contactInfo ///equal to contactInfo:contactInfo
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contactInfo: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	jimPointer := &jim
+	jimPointer.updateName("Jimmy")
+	jim.print()
+}
+
+func (pointerToPerson *person) updateName(newFirstName string) {   //*person can be read as a pointer pointing to person
+//a *person is  a type of POINTER that points to person..its in a place of type.
+	(*pointerToPerson).firstName = newFirstName 
+}
+func (p person) print() {
+	fmt.Printf("%+v", p)
+
+}
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:Jimmy lastName:Party contactInfo:{email:jim@gmail.com zipCode:94000}}
+
+Note:Hence above value is changed using pointer concept.
+
+
+
+
+
+
+Pointer shortcut..//Method 2
+package main
+
+import "fmt"
+
+type contactInfo struct { //custom type
+	email   string
+	zipCode int
+}
+type person struct {
+	firstName string
+	lastName  string
+	//contact contactInfo
+	contactInfo ///equal to contactInfo:contactInfo
+}
+
+func main() {
+
+	jim := person{
+		firstName: "Jim",
+		lastName:  "Party",
+		contactInfo: contactInfo{
+			email:   "jim@gmail.com",
+			zipCode: 94000,
+		}, //Important Note:Here comma is important.Whenever we are declaring multiline structs like this.every single line
+		//must have comma,even if it is last property
+	}
+	//jimPointer := &jim
+	//jimPointer.updateName("Jimmy")
+	jim.updateName("jimmy")
+	jim.print()
+}
+
+func (pointerToPerson *person) updateName(newFirstName string) { //*person pointer to type person
+	(*pointerToPerson).firstName = newFirstName
+}
+func (p person) print() {
+	fmt.Printf("%+v", p)
+
+}
+
+sysadmin@AcubeL020:/var/www/html/gostructs$ go run main.go
+{firstName:jimmy lastName:Party contactInfo:{email:jim@gmail.com zipCode:94000}}
+
+
+
+
+
+
+
+I.e 
+jimPointer :=&jim
+jimPointer.updateName("Jimmy")
+
+
+or 
+
+jim.updateName("Jimmy")//Go automatically convert to pointer
+
+
+Both above works in go For  Receiver function below
+
+func (pointerToPerson *person) updateName()
+
+
+
+
+
+
+
+Gotchas with Pointer
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+  mySlice:=[]string{"Hello","How","are","You"}
+  updateSlice(mySlice)
+  fmt.Print(mySlice)
+}
+
+func updateSlice(s []string){
+   s[0]="Bye"
+}
+
+
+
+output:
+[Bye How are You]
+
+
+The above program we didnt use pointer,yet that value is changed.What a Gotchaaa???
+
+
+Well Answer is
+
+
+Value Types                       Reference Types
+int,float,                        slices,maps,channel,
+sting,bolean,struct               pointers,functions
+
+
+Hence slice of string []string when passed the address is passed not a  value
+
+[]string actually contains two concepts
+i.e slice datastructure and an array.
+
+1)In one address it contains [len,cap,ptr to head]->mySlice DataStructure.
+2)[]string{"Hello","How","are","You"} //array[] thing internally
+
+so when we passed to function it actually passes
+[len,cap,ptr to head] not value.so value is changed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+some example:
+What will the following program print out?
+
+package main
+import "fmt"
+ 
+func main() {
+   name := "Bill"
+ 
+   fmt.Println(&name)
+}
+
+The memory address that "Bill" is stored at
+
+2)
+What is the &  operator used for?
+Turning a value into a pointer
+
+
+3)When you see a * operator in front of a pointer, what will it turn the pointer into?
+A value
+
+4)When the following program runs, the fmt.Println call reports that the latitude field of newYork is still equal to 40.73 .  What changes should we make to get the latitude of newYork to update to 41.0 ?
+
+package main
+import "fmt"
+ 
+type location struct {
+ longitude float64
+ latitude float64
+}
+ 
+func main() {
+ newYork := location{
+   latitude: 40.73,
+   longitude: -73.93,
+ }
+ 
+ newYork.changeLatitude()
+ 
+ fmt.Println(newYork)
+}
+ 
+func (lo location) changeLatitude() {
+ lo.latitude = 41.0
+}
+
+option1)This is not possible with go, we cannot change the original value of a struct in a function
+option2)The changeLatitude  function should use lo["latitude"] = 41.0  to update the struct
+option3)Change the receiver type of changeLatitude to *location, then replace lo with (*lo)
+in the function body.This will turn the pointer lo into a value type and then update it.
+
+
+Answer)
+
+
+
+6)
+Take a look at the following snippet of code.
+
+package main
+ 
+import "fmt"
+ 
+type location struct {
+ longitude float64
+ latitude float64
+}
+ 
+func main() {
+ newYork := location{
+ latitude: 40.73,
+ longitude: -73.93,
+ }
+ 
+ newYork.changeLatitude()
+ 
+ fmt.Println(newYork)
+}
+ 
+func (lo *location) changeLatitude() {
+ (*lo).latitude = 41.0
+}
+In the 'changeLatitude' function, what is *location in the receiver list (after the word 'func') communicating to us?
+
+option1)It specifies the type of the receiver that the function expects
+option2)It is trying to turn the location   type memory address into a value
+
+Answer)option1
+
+
+
+7)
+Take a look at the following program.  The changeLatitude function expects a receiver of type pointer to a location struct , but in the main function the receiver is a value type of a struct.  What will happen when this code is executed?
+
+package main
+ 
+import "fmt"
+ 
+type location struct {
+ longitude float64
+ latitude float64
+}
+ 
+func main() {
+ newYork := location{
+   latitude: 40.73,
+   longitude: -73.93,
+ }
+ 
+ newYork.changeLatitude()
+ 
+ fmt.Println(newYork)
+}
+ 
+func (lo *location) changeLatitude() {
+ (*lo).latitude = 41.0
+}
+
+
+
+answer)
+This program uses a shortcut, where Go will automatically assume that even though newYork.
+changeLatitude()is using a value type we probably meant to pass in a pointer to the newYork
+struct
+
+
+
+8)
+Here's a tricky one!  What will the following program print out?
+
+package main
+ 
+import "fmt"
+ 
+func main() {
+    name := "Bill"
+ 
+    fmt.Println(*&name)
+}
+
+answer)The string "Bill"
+
+
+
+
+
+
+When we create a slice, Go will automatically create which two data structures?
+ans)An array and a structure that records the length of the slice,
+ the capacity of the slice, and a reference to the underlying array
+
